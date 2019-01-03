@@ -398,7 +398,7 @@ extension ActionCableClient: WebSocketDelegate {
     }
     
     public func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
-        ActionCableConcurrentQueue.async(execute: { () -> Void in
+        ActionCableMessageQueue.async(execute: { () -> Void in
             do {
                 let message = try JSONSerializer.deserialize(text)
                 self.onMessage(message)
