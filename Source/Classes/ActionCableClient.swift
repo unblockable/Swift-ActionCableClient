@@ -320,18 +320,13 @@ extension ActionCableClient {
 }
 
 // MARK: WebSocket Callbacks
-extension ActionCableClient {
+extension ActionCableClient: WebSocketDelegate {
     
     fileprivate func setupWebSocket() {
-        self.socket.onConnect = { [weak self] in self!.didConnect() } as (() -> Void)
-        self.socket.onDisconnect = { [weak self] (error: Swift.Error?) in self!.didDisconnect(error) }
-        self.socket.onText       = { [weak self] (text: String) in self!.onText(text) }
-        self.socket.onData       = { [weak self] (data: Data) in self!.onData(data) }
-        self.socket.onPong       = { [weak self] (data: Data?) in self!.didPong() }
+        socket.delegate = self
     }
     
-    fileprivate func didConnect() {
-        
+    public func websocketDidConnect(socket: WebSocketClient) {
         // Clear Reconnection State: We successfull connected
         reconnectionState = nil
         
@@ -346,8 +341,7 @@ extension ActionCableClient {
         }
     }
     
-    fileprivate func didDisconnect(_ error: Swift.Error?) {
-        
+    public func websocketDidDisconnect(socket: WebSocketClient, error: Error?) {
         var attemptReconnect: Bool = true
         var connectionError: ConnectionError?
         
@@ -403,11 +397,7 @@ extension ActionCableClient {
         manualDisconnectFlag = false
     }
     
-    fileprivate func didPong() {
-        // This never seems to fire with ActionCable!
-    }
-    
-    fileprivate func onText(_ text: String) {
+    public func websocketDidReceiveMessage(socket: WebSocketClient, text: String) {
         ActionCableConcurrentQueue.async(execute: { () -> Void in
             do {
                 let message = try JSONSerializer.deserialize(text)
@@ -480,7 +470,7 @@ extension ActionCableClient {
             }
     }
     
-    fileprivate func onData(_ data: Data) {
+    public func websocketDidReceiveData(socket: WebSocketClient, data: Data) {
         debugPrint("Received NSData from ActionCable.")
     }
 }
